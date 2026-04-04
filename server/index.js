@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import enquiryRoutes from './routes/enquiry.js';
+import { logMailConfig } from './services/mail.js';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 5001;
@@ -56,6 +57,8 @@ async function start() {
     console.error('MongoDB connection failed:', err.message);
     process.exit(1);
   }
+
+  logMailConfig();
 
   const server = app.listen(PORT, () => {
     console.log(`Server listening on http://localhost:${PORT}`);

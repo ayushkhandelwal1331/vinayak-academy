@@ -11,6 +11,21 @@ function isMailConfigured() {
   );
 }
 
+export function logMailConfig() {
+  const user = trimEnv('SMTP_USER');
+  const pass = trimEnv('SMTP_PASS');
+  const notify = trimEnv('NOTIFY_EMAIL');
+  const host = trimEnv('SMTP_HOST');
+
+  console.log('--- Mail configuration check ---');
+  console.log('  SMTP_USER  :', user ? `${user.slice(0, 4)}****` : '(NOT SET)');
+  console.log('  SMTP_PASS  :', pass ? '****' : '(NOT SET)');
+  console.log('  NOTIFY_EMAIL:', notify ? `${notify.slice(0, 4)}****` : '(NOT SET)');
+  console.log('  SMTP_HOST  :', host || '(NOT SET — will default to gmail service)');
+  console.log('  Mail ready :', isMailConfigured() ? 'YES' : 'NO — emails will be skipped');
+  console.log('--------------------------------');
+}
+
 /**
  * Gmail: use built-in `service: 'gmail'` so the correct SMTP host is always used.
  * A wrong SMTP_HOST (e.g. accidentally set to your email) causes DNS errors like

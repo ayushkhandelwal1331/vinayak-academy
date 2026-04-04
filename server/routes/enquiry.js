@@ -35,47 +35,41 @@ router.post('/enquiry', async (req, res) => {
 
     await enquiry.save();
 
-    const mailResult = await sendEnquiryNotification({
+    const enquiryData = {
       studentName: enquiry.studentName,
       phoneNumber: enquiry.phoneNumber,
       email: enquiry.email,
       grade: enquiry.grade,
       subject: enquiry.subject,
       message: enquiry.message,
-    });
+    };
+
+    const mailResult = await sendEnquiryNotification(enquiryData);
     if (!mailResult.sent) {
-      if (mailResult.reason === 'SMTP not configured') {
-        console.warn(
-          'Enquiry saved but email skipped: set SMTP_USER, SMTP_PASS, NOTIFY_EMAIL in .env'
-        );
-      } else {
-        console.warn('Enquiry saved but email failed:', mailResult.reason);
-      }
+      console.warn(
+        `[MAIL] Admin notification FAILED: ${mailResult.reason}`,
+        mailResult.reason === 'SMTP not configured'
+          ? '→ Set SMTP_USER, SMTP_PASS, NOTIFY_EMAIL as environment variables on your deployment platform'
+          : ''
+      );
+    } else {
+      console.log('[MAIL] Admin notification sent successfully');
     }
 
     try {
-      const confirmationResult = await sendStudentEnquiryConfirmation({
-        studentName: enquiry.studentName,
-        phoneNumber: enquiry.phoneNumber,
-        email: enquiry.email,
-        grade: enquiry.grade,
-        subject: enquiry.subject,
-      });
-
+      const confirmationResult = await sendStudentEnquiryConfirmation(enquiryData);
       if (!confirmationResult.sent) {
-        if (confirmationResult.reason === 'SMTP not configured') {
-          console.warn(
-            'Enquiry saved but student confirmation email skipped: set SMTP_USER, SMTP_PASS, NOTIFY_EMAIL in .env'
-          );
-        } else {
-          console.warn(
-            'Enquiry saved but student confirmation email failed:',
-            confirmationResult.reason
-          );
-        }
+        console.warn(
+          `[MAIL] Student confirmation FAILED: ${confirmationResult.reason}`,
+          confirmationResult.reason === 'SMTP not configured'
+            ? '→ Set SMTP_USER, SMTP_PASS, NOTIFY_EMAIL as environment variables on your deployment platform'
+            : ''
+        );
+      } else {
+        console.log('[MAIL] Student confirmation sent successfully');
       }
     } catch (err) {
-      console.error('Student confirmation email failed unexpectedly:', err);
+      console.error('[MAIL] Student confirmation failed unexpectedly:', err);
     }
 
     return res.status(201).json({
