@@ -35,6 +35,14 @@ router.post('/enquiry', async (req, res) => {
 
     await enquiry.save();
 
+    // Respond immediately — don't make the user wait for emails
+    res.status(201).json({
+      success: true,
+      message: 'Enquiry saved successfully',
+      id: enquiry._id,
+    });
+
+    // Fire both emails in parallel in the background
     const enquiryData = {
       studentName: enquiry.studentName,
       phoneNumber: enquiry.phoneNumber,
@@ -44,39 +52,23 @@ router.post('/enquiry', async (req, res) => {
       message: enquiry.message,
     };
 
-    const mailResult = await sendEnquiryNotification(enquiryData);
-    if (!mailResult.sent) {
-      console.warn(
-        `[MAIL] Admin notification FAILED: ${mailResult.reason}`,
-        mailResult.reason === 'SMTP not configured'
-          ? '→ Set SMTP_USER, SMTP_PASS, NOTIFY_EMAIL as environment variables on your deployment platform'
-          : ''
-      );
-    } else {
-      console.log('[MAIL] Admin notification sent successfully');
-    }
-
-    try {
-      const confirmationResult = await sendStudentEnquiryConfirmation(enquiryData);
-      if (!confirmationResult.sent) {
-        console.warn(
-          `[MAIL] Student confirmation FAILED: ${confirmationResult.reason}`,
-          confirmationResult.reason === 'SMTP not configured'
-            ? '→ Set SMTP_USER, SMTP_PASS, NOTIFY_EMAIL as environment variables on your deployment platform'
-            : ''
-        );
+    Promise.allSettled([
+      sendEnquiryNotification(enquiryData),
+      sendStudentEnquiryConfirmation(enquiryData),
+    ]).then(([admin, student]) => {
+      if (admin.value?.sent) {
+        console.log('[MAIL] Admin notification sent');
       } else {
-        console.log('[MAIL] Student confirmation sent successfully');
+        console.warn('[MAIL] Admin notification failed:', admin.value?.reason || admin.reason);
       }
-    } catch (err) {
-      console.error('[MAIL] Student confirmation failed unexpectedly:', err);
-    }
-
-    return res.status(201).json({
-      success: true,
-      message: 'Enquiry saved successfully',
-      id: enquiry._id,
+      if (student.value?.sent) {
+        console.log('[MAIL] Student confirmation sent');
+      } else {
+        console.warn('[MAIL] Student confirmation failed:', student.value?.reason || student.reason);
+      }
     });
+
+    return;
   } catch (err) {
     console.error('POST /enquiry error:', err);
     return res.status(500).json({

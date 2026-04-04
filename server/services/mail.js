@@ -26,12 +26,15 @@ export function logMailConfig() {
   console.log('--------------------------------');
 }
 
+let _transporter = null;
+
 /**
+ * Reuse a single pooled SMTP connection instead of opening a new one per email.
  * Gmail: use built-in `service: 'gmail'` so the correct SMTP host is always used.
- * A wrong SMTP_HOST (e.g. accidentally set to your email) causes DNS errors like
- * `queryA EBADNAME user@gmail.com`.
  */
-function createTransporter() {
+function getTransporter() {
+  if (_transporter) return _transporter;
+
   const user = trimEnv('SMTP_USER');
   const pass = trimEnv('SMTP_PASS');
   const hostRaw = trimEnv('SMTP_HOST');
@@ -39,10 +42,13 @@ function createTransporter() {
 
   const isGmailUser = /@gmail\.com$/i.test(user);
   if (isGmailUser && (hostMisconfigured || /^smtp\.gmail\.com$/i.test(hostRaw))) {
-    return nodemailer.createTransport({
+    _transporter = nodemailer.createTransport({
       service: 'gmail',
+      pool: true,
+      maxConnections: 3,
       auth: { user, pass },
     });
+    return _transporter;
   }
 
   const port = Number(trimEnv('SMTP_PORT')) || 587;
@@ -50,12 +56,15 @@ function createTransporter() {
     trimEnv('SMTP_SECURE') === 'true' || trimEnv('SMTP_SECURE') === '1';
   const host = hostMisconfigured ? 'smtp.gmail.com' : hostRaw;
 
-  return nodemailer.createTransport({
+  _transporter = nodemailer.createTransport({
     host,
     port,
     secure,
+    pool: true,
+    maxConnections: 3,
     auth: { user, pass },
   });
+  return _transporter;
 }
 
 /**
@@ -96,8 +105,7 @@ export async function sendEnquiryNotification(enquiry) {
   `;
 
   try {
-    const transporter = createTransporter();
-    await transporter.sendMail({
+    await getTransporter().sendMail({
       from,
       to,
       subject: `[Vinayak Academy] New enquiry from ${enquiry.studentName}`,
@@ -198,8 +206,7 @@ export async function sendStudentEnquiryConfirmation(enquiry) {
   `;
 
   try {
-    const transporter = createTransporter();
-    await transporter.sendMail({
+    await getTransporter().sendMail({
       from,
       to: enquiry.email,
       subject: 'Thank you for contacting Vinayak Academy! 🎓',
