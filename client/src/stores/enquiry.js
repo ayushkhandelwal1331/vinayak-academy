@@ -4,6 +4,10 @@ import axios from 'axios';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+/** Full URL for enquiry POST; uses Vite proxy (`/api/...`) when `VITE_API_URL` is unset. */
+const enquiryUrl = apiBase ? `${apiBase}/api/enquiry` : '/api/enquiry';
+
 /**
  * Contact / demo enquiry form state and submission (POST /api/enquiry).
  */
@@ -135,7 +139,7 @@ export const useEnquiryStore = defineStore('enquiry', () => {
         subject: form.subject,
         message: form.message.trim(),
       };
-      const { data } = await axios.post('/api/enquiry', payload);
+      const { data } = await axios.post(enquiryUrl, payload);
       if (data.success) {
         successMessage.value = "Thank you! We'll contact you within 24 hours 🎉";
         resetForm();
