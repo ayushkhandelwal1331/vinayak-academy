@@ -11,6 +11,19 @@ function isMailConfigured() {
   );
 }
 
+export function getMailStatus() {
+  const user = trimEnv('SMTP_USER');
+  const pass = trimEnv('SMTP_PASS');
+  const notify = trimEnv('NOTIFY_EMAIL');
+  return {
+    ready: isMailConfigured(),
+    hasSmtpUser: Boolean(user),
+    hasSmtpPass: Boolean(pass),
+    hasNotifyEmail: Boolean(notify),
+    smtpHost: trimEnv('SMTP_HOST') || '(default: gmail)',
+  };
+}
+
 export function logMailConfig() {
   const user = trimEnv('SMTP_USER');
   const pass = trimEnv('SMTP_PASS');
