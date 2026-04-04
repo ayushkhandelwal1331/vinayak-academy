@@ -7,6 +7,8 @@ import enquiryRoutes from './routes/enquiry.js';
 const app = express();
 const PORT = Number(process.env.PORT) || 5001;
 const MONGODB_URI = process.env.MONGODB_URI;
+/** Always use this DB name (overrides missing or wrong path in MONGODB_URI, e.g. Atlas defaulting to `test`). */
+const MONGODB_DB_NAME = process.env.MONGODB_DB_NAME || 'vinayak_academy';
 const allowedOrigins = new Set(
   [
     'http://localhost:5173',
@@ -48,8 +50,8 @@ async function start() {
   }
 
   try {
-    await mongoose.connect(MONGODB_URI);
-    console.log('Connected to MongoDB');
+    await mongoose.connect(MONGODB_URI, { dbName: MONGODB_DB_NAME });
+    console.log(`Connected to MongoDB (database: ${MONGODB_DB_NAME})`);
   } catch (err) {
     console.error('MongoDB connection failed:', err.message);
     process.exit(1);

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import Enquiry from '../models/Enquiry.js';
+import { sendEnquiryNotification } from '../services/mail.js';
 
 const router = Router();
 
@@ -30,6 +31,24 @@ router.post('/enquiry', async (req, res) => {
     });
 
     await enquiry.save();
+
+    const mailResult = await sendEnquiryNotification({
+      studentName: enquiry.studentName,
+      phoneNumber: enquiry.phoneNumber,
+      email: enquiry.email,
+      grade: enquiry.grade,
+      subject: enquiry.subject,
+      message: enquiry.message,
+    });
+    if (!mailResult.sent) {
+      if (mailResult.reason === 'SMTP not configured') {
+        console.warn(
+          'Enquiry saved but email skipped: set SMTP_USER, SMTP_PASS, NOTIFY_EMAIL in .env'
+        );
+      } else {
+        console.warn('Enquiry saved but email failed:', mailResult.reason);
+      }
+    }
 
     return res.status(201).json({
       success: true,
