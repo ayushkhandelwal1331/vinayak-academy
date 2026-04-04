@@ -1,4 +1,4 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
 function trimEnv(key) {
   const v = process.env[key];
@@ -6,105 +6,45 @@ function trimEnv(key) {
 }
 
 function isMailConfigured() {
-  return Boolean(
-    trimEnv('SMTP_USER') && trimEnv('SMTP_PASS') && trimEnv('NOTIFY_EMAIL')
-  );
+  return Boolean(trimEnv('RESEND_API_KEY') && trimEnv('NOTIFY_EMAIL'));
 }
 
 export function getMailStatus() {
-  const user = trimEnv('SMTP_USER');
-  const pass = trimEnv('SMTP_PASS');
-  const notify = trimEnv('NOTIFY_EMAIL');
   return {
     ready: isMailConfigured(),
-    hasSmtpUser: Boolean(user),
-    hasSmtpPass: Boolean(pass),
-    hasNotifyEmail: Boolean(notify),
-    smtpHost: trimEnv('SMTP_HOST') || '(default: gmail)',
+    hasResendKey: Boolean(trimEnv('RESEND_API_KEY')),
+    hasNotifyEmail: Boolean(trimEnv('NOTIFY_EMAIL')),
   };
 }
 
 export function logMailConfig() {
-  const user = trimEnv('SMTP_USER');
-  const pass = trimEnv('SMTP_PASS');
+  const key = trimEnv('RESEND_API_KEY');
   const notify = trimEnv('NOTIFY_EMAIL');
-  const host = trimEnv('SMTP_HOST');
 
   console.log('--- Mail configuration check ---');
-  console.log('  SMTP_USER  :', user ? `${user.slice(0, 4)}****` : '(NOT SET)');
-  console.log('  SMTP_PASS  :', pass ? '****' : '(NOT SET)');
-  console.log('  NOTIFY_EMAIL:', notify ? `${notify.slice(0, 4)}****` : '(NOT SET)');
-  console.log('  SMTP_HOST  :', host || '(NOT SET — will default to gmail service)');
-  console.log('  Mail ready :', isMailConfigured() ? 'YES' : 'NO — emails will be skipped');
+  console.log('  RESEND_API_KEY:', key ? `${key.slice(0, 8)}****` : '(NOT SET)');
+  console.log('  NOTIFY_EMAIL  :', notify || '(NOT SET)');
+  console.log('  Mail ready    :', isMailConfigured() ? 'YES' : 'NO — emails will be skipped');
   console.log('--------------------------------');
 }
 
-let _transporter = null;
-
-/**
- * Reuse a single pooled SMTP connection instead of opening a new one per email.
- * Gmail: use built-in `service: 'gmail'` so the correct SMTP host is always used.
- */
-function getTransporter() {
-  if (_transporter) return _transporter;
-
-  const user = trimEnv('SMTP_USER');
-  const pass = trimEnv('SMTP_PASS');
-  const hostRaw = trimEnv('SMTP_HOST');
-  const hostMisconfigured = !hostRaw || hostRaw.includes('@');
-
-  const isGmailUser = /@gmail\.com$/i.test(user);
-  if (isGmailUser && (hostMisconfigured || /^smtp\.gmail\.com$/i.test(hostRaw))) {
-    _transporter = nodemailer.createTransport({
-      service: 'gmail',
-      pool: true,
-      maxConnections: 3,
-      auth: { user, pass },
-    });
-    return _transporter;
+let _resend = null;
+function getResend() {
+  if (!_resend) {
+    _resend = new Resend(trimEnv('RESEND_API_KEY'));
   }
-
-  const port = Number(trimEnv('SMTP_PORT')) || 587;
-  const secure =
-    trimEnv('SMTP_SECURE') === 'true' || trimEnv('SMTP_SECURE') === '1';
-  const host = hostMisconfigured ? 'smtp.gmail.com' : hostRaw;
-
-  _transporter = nodemailer.createTransport({
-    host,
-    port,
-    secure,
-    pool: true,
-    maxConnections: 3,
-    auth: { user, pass },
-  });
-  return _transporter;
+  return _resend;
 }
 
 /**
  * Sends you an email when someone submits the enquiry form.
- * Returns { sent: true } or { sent: false, reason } — never throws.
  */
 export async function sendEnquiryNotification(enquiry) {
   if (!isMailConfigured()) {
-    return { sent: false, reason: 'SMTP not configured' };
+    return { sent: false, reason: 'Mail not configured' };
   }
 
   const to = trimEnv('NOTIFY_EMAIL');
-  const smtpUser = trimEnv('SMTP_USER');
-  const from = trimEnv('SMTP_FROM') || `"Vinayak Academy" <${smtpUser}>`;
-
-  const lines = [
-    'New Student Enquiry',
-    '',
-    `Student name: ${enquiry.studentName}`,
-    `Phone: ${enquiry.phoneNumber}`,
-    `Email: ${enquiry.email}`,
-    `Grade: ${enquiry.grade}`,
-    `Subject: ${enquiry.subject}`,
-    enquiry.message ? `Message:\n${enquiry.message}` : 'Message: (none)',
-  ];
-
-  const text = lines.join('\n');
   const html = `
     <h2>New website enquiry</h2>
     <table style="border-collapse:collapse">
@@ -118,58 +58,35 @@ export async function sendEnquiryNotification(enquiry) {
   `;
 
   try {
-    await getTransporter().sendMail({
-      from,
+    const { data, error } = await getResend().emails.send({
+      from: 'Vinayak Academy <onboarding@resend.dev>',
       to,
       subject: `[Vinayak Academy] New enquiry from ${enquiry.studentName}`,
-      text,
       html,
     });
-    return { sent: true };
-  } catch (err) {
-    console.error('sendEnquiryNotification failed:', err.message);
-    if (err.response) {
-      console.error('SMTP response:', err.response);
+    if (error) {
+      console.error('[MAIL] Admin notification error:', error);
+      return { sent: false, reason: error.message };
     }
+    return { sent: true, id: data?.id };
+  } catch (err) {
+    console.error('[MAIL] Admin notification failed:', err.message);
     return { sent: false, reason: err.message };
   }
 }
 
 /**
  * Sends a confirmation email to the student after the enquiry is saved.
- * Returns { sent: true } or { sent: false, reason } — never throws.
  */
 export async function sendStudentEnquiryConfirmation(enquiry) {
   if (!isMailConfigured()) {
-    return { sent: false, reason: 'SMTP not configured' };
+    return { sent: false, reason: 'Mail not configured' };
   }
 
-  const smtpUser = trimEnv('SMTP_USER');
-  const from = trimEnv('SMTP_FROM') || `"Vinayak Academy" <${smtpUser}>`;
   const supportPhone = '+91-7000679090';
   const supportPhoneHref = 'tel:+917000679090';
   const whatsappHref = 'https://wa.me/917000679090';
   const studentName = enquiry.studentName;
-
-  const text = [
-    `Dear ${studentName},`,
-    '',
-    'Thank you for contacting Vinayak Academy.',
-    'We have received your enquiry and will contact you within 24 hours.',
-    '',
-    'Your submission summary:',
-    `Name: ${studentName}`,
-    `Class: ${enquiry.grade}`,
-    `Subject: ${enquiry.subject}`,
-    `Phone number: ${enquiry.phoneNumber}`,
-    '',
-    `WhatsApp: ${supportPhone}`,
-    `Call: ${supportPhone}`,
-    '',
-    'Warm regards,',
-    'Ruchi Khandelwal',
-    'Vinayak Academy',
-  ].join('\n');
 
   const html = `
     <div style="margin:0;padding:24px 0;background:#f4f8ff;font-family:Arial,sans-serif;color:#163152;">
@@ -219,44 +136,41 @@ export async function sendStudentEnquiryConfirmation(enquiry) {
   `;
 
   try {
-    await getTransporter().sendMail({
-      from,
+    const { data, error } = await getResend().emails.send({
+      from: 'Vinayak Academy <onboarding@resend.dev>',
       to: enquiry.email,
       subject: 'Thank you for contacting Vinayak Academy! 🎓',
-      text,
       html,
     });
-    return { sent: true };
-  } catch (err) {
-    console.error('sendStudentEnquiryConfirmation failed:', err.message);
-    if (err.response) {
-      console.error('SMTP response:', err.response);
+    if (error) {
+      console.error('[MAIL] Student confirmation error:', error);
+      return { sent: false, reason: error.message };
     }
+    return { sent: true, id: data?.id };
+  } catch (err) {
+    console.error('[MAIL] Student confirmation failed:', err.message);
     return { sent: false, reason: err.message };
   }
 }
 
 /**
- * Sends a quick test email and returns the result (including any SMTP error).
- * Used by the /health/test-mail diagnostic endpoint — remove after debugging.
+ * Sends a quick test email — used by /health/test-mail diagnostic endpoint.
  */
 export async function sendTestMail() {
   if (!isMailConfigured()) {
-    return { sent: false, reason: 'SMTP not configured' };
+    return { sent: false, reason: 'Mail not configured' };
   }
-  const smtpUser = trimEnv('SMTP_USER');
-  const to = trimEnv('NOTIFY_EMAIL');
-  const from = trimEnv('SMTP_FROM') || `"Vinayak Academy" <${smtpUser}>`;
   try {
-    const info = await getTransporter().sendMail({
-      from,
-      to,
+    const { data, error } = await getResend().emails.send({
+      from: 'Vinayak Academy <onboarding@resend.dev>',
+      to: trimEnv('NOTIFY_EMAIL'),
       subject: '[Vinayak Academy] Test email — deployment check',
       text: 'If you received this, email sending is working on your deployed server.',
     });
-    return { sent: true, messageId: info.messageId, response: info.response };
+    if (error) return { sent: false, reason: error.message };
+    return { sent: true, id: data?.id };
   } catch (err) {
-    return { sent: false, reason: err.message, code: err.code, response: err.response };
+    return { sent: false, reason: err.message };
   }
 }
 
