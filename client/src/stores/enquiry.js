@@ -5,6 +5,7 @@ import axios from 'axios';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+const missingProductionApiBase = import.meta.env.PROD && !apiBase;
 /** Full URL for enquiry POST; uses Vite proxy (`/api/...`) when `VITE_API_URL` is unset. */
 const enquiryUrl = apiBase ? `${apiBase}/api/enquiry` : '/api/enquiry';
 
@@ -148,7 +149,11 @@ export const useEnquiryStore = defineStore('enquiry', () => {
       }
     } catch (e) {
       const msg = e.response?.data?.message;
-      errorMessage.value = msg || 'Submission failed. Please check your connection and try again.';
+      errorMessage.value =
+        msg ||
+        (missingProductionApiBase
+          ? 'Form submission is not configured for production yet. Set VITE_API_URL to your backend URL and try again.'
+          : 'Submission failed. Please check your connection and try again.');
     } finally {
       submitting.value = false;
     }

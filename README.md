@@ -40,6 +40,12 @@ Vinayak_Academy/
 
    Set `MONGODB_URI` in `.env` to your real MongoDB connection string. Default `PORT=5001` (change if needed; if you change it, update `client/vite.config.js` proxy target to match).
 
+   For deployed frontends on a different domain, also set `ALLOWED_ORIGINS` as a comma-separated list, for example:
+
+   ```bash
+   ALLOWED_ORIGINS=https://your-frontend-domain.vercel.app
+   ```
+
 3. Start the API:
 
    ```bash
@@ -69,11 +75,17 @@ Vinayak_Academy/
 
 The Vite dev server proxies `/api` to `http://localhost:5001` (same port as `PORT` in `server/.env`), so the contact form works without extra CORS configuration during local development.
 
+3. For production builds where the frontend and backend are on different origins, create `client/.env` from `client/.env.example` and set:
+
+   ```bash
+   VITE_API_URL=https://your-api-domain.com
+   ```
+
 ## Production notes
 
 - Build the client: `cd client && npm run build`. Static files are output to `client/dist/`.
 - Serve `dist/` with any static host, or serve it from Express.
-- If the frontend and API are on **different origins** (e.g. `https://app.example.com` and `https://api.example.com`), update **CORS** in `server/index.js` to allow your production frontend origin, or put both behind the same domain with a reverse proxy.
+- If the frontend and API are on **different origins** (e.g. `https://app.example.com` and `https://api.example.com`), set `ALLOWED_ORIGINS` on the server and `VITE_API_URL` on the client to your real deployed domains.
 
 ## Environment files
 

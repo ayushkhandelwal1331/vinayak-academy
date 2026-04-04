@@ -7,15 +7,27 @@ import enquiryRoutes from './routes/enquiry.js';
 const app = express();
 const PORT = Number(process.env.PORT) || 5001;
 const MONGODB_URI = process.env.MONGODB_URI;
-
-const allowedOrigins = [
-  'http://localhost:5173',
-  'https://your-vercel-url.vercel.app',
-];
+const allowedOrigins = new Set(
+  [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    ...(process.env.ALLOWED_ORIGINS || '')
+      .split(',')
+      .map((origin) => origin.trim())
+      .filter(Boolean),
+  ]
+);
 
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin(origin, callback) {
+      // Allow same-origin and non-browser requests; validate cross-origin browser traffic.
+      if (!origin || allowedOrigins.has(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type'],
   })
