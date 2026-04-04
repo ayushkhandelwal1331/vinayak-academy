@@ -26,7 +26,7 @@ const features = [
 </script>
 
 <template>
-  <section class="bg-white px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+  <section class="bg-white px-4 pb-16 pt-8 sm:px-6 sm:pb-20 sm:pt-10 lg:px-8">
     <FadeInBlock>
       <div class="mx-auto max-w-6xl">
         <h2 class="font-display text-primary mb-10 text-center text-3xl font-bold sm:text-4xl">

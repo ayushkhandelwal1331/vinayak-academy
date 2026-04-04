@@ -2,6 +2,7 @@
 import Navbar from '../components/Navbar.vue';
 import HeroSection from '../components/HeroSection.vue';
 import AboutSection from '../components/AboutSection.vue';
+import CtaAndStatsSection from '../components/CtaAndStatsSection.vue';
 import SubjectsSection from '../components/SubjectsSection.vue';
 import WhyChooseUs from '../components/WhyChooseUs.vue';
 import ReviewsSection from '../components/ReviewsSection.vue';
@@ -15,8 +16,9 @@ import FloatingWhatsApp from '../components/FloatingWhatsApp.vue';
     <main>
       <HeroSection />
       <AboutSection />
-      <SubjectsSection />
+      <CtaAndStatsSection />
       <WhyChooseUs />
+      <SubjectsSection />
       <ReviewsSection />
     </main>
     <Footer />

@@ -1,6 +1,9 @@
 import { Router } from 'express';
 import Enquiry from '../models/Enquiry.js';
-import { sendEnquiryNotification } from '../services/mail.js';
+import {
+  sendEnquiryNotification,
+  sendStudentEnquiryConfirmation,
+} from '../services/mail.js';
 
 const router = Router();
 
@@ -48,6 +51,31 @@ router.post('/enquiry', async (req, res) => {
       } else {
         console.warn('Enquiry saved but email failed:', mailResult.reason);
       }
+    }
+
+    try {
+      const confirmationResult = await sendStudentEnquiryConfirmation({
+        studentName: enquiry.studentName,
+        phoneNumber: enquiry.phoneNumber,
+        email: enquiry.email,
+        grade: enquiry.grade,
+        subject: enquiry.subject,
+      });
+
+      if (!confirmationResult.sent) {
+        if (confirmationResult.reason === 'SMTP not configured') {
+          console.warn(
+            'Enquiry saved but student confirmation email skipped: set SMTP_USER, SMTP_PASS, NOTIFY_EMAIL in .env'
+          );
+        } else {
+          console.warn(
+            'Enquiry saved but student confirmation email failed:',
+            confirmationResult.reason
+          );
+        }
+      }
+    } catch (err) {
+      console.error('Student confirmation email failed unexpectedly:', err);
     }
 
     return res.status(201).json({

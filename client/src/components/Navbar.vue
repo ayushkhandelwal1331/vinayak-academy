@@ -47,6 +47,12 @@ function goContact(e) {
   router.push({ name: 'contact' });
 }
 
+function goFaq(e) {
+  e.preventDefault();
+  ui.closeMobileMenu();
+  router.push({ name: 'faq' });
+}
+
 function handleLogoClick(e) {
   e.preventDefault();
   ui.closeMobileMenu();
@@ -92,6 +98,16 @@ onUnmounted(() => {
             @click="handleSectionClick($event, link.id)"
           >
             {{ link.label }}
+          </a>
+        </li>
+        <li>
+          <a
+            href="/faq"
+            class="text-dark/80 hover:text-accent font-sans text-sm font-semibold transition-colors"
+            :class="{ 'text-primary': route.name === 'faq' }"
+            @click="goFaq"
+          >
+            FAQ
           </a>
         </li>
         <li>
@@ -147,6 +163,16 @@ onUnmounted(() => {
             @click="handleSectionClick($event, link.id)"
           >
             {{ link.label }}
+          </a>
+        </li>
+        <li>
+          <a
+            href="/faq"
+            class="text-dark hover:bg-light block rounded-lg px-3 py-2 font-semibold transition-colors"
+            :class="{ 'text-primary': route.name === 'faq' }"
+            @click="goFaq"
+          >
+            FAQ
           </a>
         </li>
         <li>

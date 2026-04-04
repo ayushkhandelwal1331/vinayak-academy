@@ -36,7 +36,7 @@ function goContact(e) {
         <div>
           <p class="font-display text-xl font-semibold">Vinayak Academy 🎓</p>
           <p class="text-white/75 mt-2 text-sm leading-relaxed">
-            Quality online tuition for Class 1–10 — clear concepts, caring guidance, real progress.
+            Quality online tuition for Class 5–10 — clear concepts, caring guidance, real progress.
           </p>
         </div>
         <div>

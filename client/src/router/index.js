@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import Home from '../views/Home.vue';
 import BookDemo from '../views/BookDemo.vue';
 import ContactUs from '../views/ContactUs.vue';
+import FAQView from '../views/FAQView.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -27,6 +28,15 @@ const router = createRouter({
       path: '/contact',
       name: 'contact',
       component: ContactUs,
+    },
+    {
+      path: '/faq',
+      name: 'faq',
+      component: FAQView,
+    },
+    {
+      path: '/free-demo',
+      redirect: { name: 'book-demo' },
     },
   ],
 });
