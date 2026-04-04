@@ -236,6 +236,30 @@ export async function sendStudentEnquiryConfirmation(enquiry) {
   }
 }
 
+/**
+ * Sends a quick test email and returns the result (including any SMTP error).
+ * Used by the /health/test-mail diagnostic endpoint — remove after debugging.
+ */
+export async function sendTestMail() {
+  if (!isMailConfigured()) {
+    return { sent: false, reason: 'SMTP not configured' };
+  }
+  const smtpUser = trimEnv('SMTP_USER');
+  const to = trimEnv('NOTIFY_EMAIL');
+  const from = trimEnv('SMTP_FROM') || `"Vinayak Academy" <${smtpUser}>`;
+  try {
+    const info = await getTransporter().sendMail({
+      from,
+      to,
+      subject: '[Vinayak Academy] Test email — deployment check',
+      text: 'If you received this, email sending is working on your deployed server.',
+    });
+    return { sent: true, messageId: info.messageId, response: info.response };
+  } catch (err) {
+    return { sent: false, reason: err.message, code: err.code, response: err.response };
+  }
+}
+
 function escapeHtml(s) {
   return String(s)
     .replace(/&/g, '&amp;')

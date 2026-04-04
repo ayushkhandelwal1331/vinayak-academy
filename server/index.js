@@ -3,7 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import enquiryRoutes from './routes/enquiry.js';
-import { logMailConfig, getMailStatus } from './services/mail.js';
+import { logMailConfig, getMailStatus, sendTestMail } from './services/mail.js';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 5001;
@@ -42,6 +42,11 @@ app.use('/api', enquiryRoutes);
 
 app.get('/health', (req, res) => {
   res.json({ ok: true, mail: getMailStatus() });
+});
+
+app.get('/health/test-mail', async (req, res) => {
+  const result = await sendTestMail();
+  res.json(result);
 });
 
 async function start() {
