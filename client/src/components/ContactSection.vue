@@ -3,6 +3,15 @@ import { storeToRefs } from 'pinia';
 import { useEnquiryStore } from '../stores/enquiry';
 import FadeInBlock from './FadeInBlock.vue';
 
+defineProps({
+  heading: { type: String, default: 'Book Your Free Demo Class' },
+  subheading: {
+    type: String,
+    default: "Fill in your details and we'll get back to you within 24 hours",
+  },
+  embedded: { type: Boolean, default: false },
+});
+
 const enquiry = useEnquiryStore();
 const { form, errors, submitting, successMessage, errorMessage } = storeToRefs(enquiry);
 
@@ -22,14 +31,22 @@ const subjects = [
 </script>
 
 <template>
-  <section id="contact" class="bg-white px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+  <component
+    :is="embedded ? 'div' : 'section'"
+    :id="embedded ? undefined : 'contact'"
+    :class="
+      embedded
+        ? 'w-full'
+        : 'bg-white px-4 py-16 sm:px-6 sm:py-20 lg:px-8'
+    "
+  >
     <FadeInBlock>
-      <div class="mx-auto max-w-xl">
+      <div :class="embedded ? 'mx-auto w-full max-w-2xl' : 'mx-auto max-w-xl'">
         <h2 class="font-display text-primary text-center text-3xl font-bold sm:text-4xl">
-          Book Your Free Demo Class
+          {{ heading }}
         </h2>
         <p class="text-dark/75 mt-3 text-center text-sm sm:text-base">
-          Fill in your details and we'll get back to you within 24 hours
+          {{ subheading }}
         </p>
 
         <form
@@ -52,15 +69,17 @@ const subjects = [
           </div>
 
           <div>
-            <label for="phone" class="mb-1 block text-sm font-semibold text-dark">Parent's Phone Number *</label>
+            <label for="phone" class="mb-1 block text-sm font-semibold text-dark">Phone Number *</label>
             <input
               id="phone"
               v-model="form.phoneNumber"
               type="tel"
+              inputmode="numeric"
               required
               autocomplete="tel"
               class="focus:ring-accent w-full rounded-xl border border-dark/15 px-4 py-3 text-dark outline-none focus:border-accent focus:ring-2"
               placeholder="10-digit mobile number"
+              @input="enquiry.validatePhoneWhileTyping()"
             />
             <p v-if="errors.phoneNumber" class="mt-1 text-sm text-red-600">{{ errors.phoneNumber }}</p>
           </div>
@@ -75,6 +94,7 @@ const subjects = [
               autocomplete="email"
               class="focus:ring-accent w-full rounded-xl border border-dark/15 px-4 py-3 text-dark outline-none focus:border-accent focus:ring-2"
               placeholder="you@example.com"
+              @input="enquiry.validateEmailWhileTyping()"
             />
             <p v-if="errors.email" class="mt-1 text-sm text-red-600">{{ errors.email }}</p>
           </div>
@@ -135,5 +155,5 @@ const subjects = [
         </form>
       </div>
     </FadeInBlock>
-  </section>
+  </component>
 </template>

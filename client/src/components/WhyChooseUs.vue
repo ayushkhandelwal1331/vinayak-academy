@@ -5,7 +5,7 @@ const features = [
   {
     icon: '👩‍🏫',
     title: 'Personal Attention',
-    text: 'Small batch sizes ensure every student gets individual focus',
+    text: 'One-to-One interactive live classes for each student',
   },
   {
     icon: '📅',

@@ -11,6 +11,10 @@ function scrollTo(id) {
 function goBookDemo() {
   router.push({ name: 'book-demo' });
 }
+
+function goContact() {
+  router.push({ name: 'contact' });
+}
 </script>
 
 <template>
@@ -43,9 +47,11 @@ function goBookDemo() {
         Learn with Confidence, Grow with Clarity
       </h1>
       <p class="mx-auto mt-5 max-w-2xl text-base text-dark/80 sm:text-lg">
-        Online tuition classes for Class 1–10 | Maths, Science, English, Hindi &amp; Social Studies
+        Online tuition classes for Class 5 – 10 | Maths, Science, English, Hindi &amp; Social Studies
       </p>
-      <div class="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row sm:gap-5">
+      <div
+        class="mt-8 flex flex-col items-stretch justify-center gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-5"
+      >
         <button
           type="button"
           class="bg-primary hover:bg-primary/90 w-full rounded-xl px-8 py-3.5 font-semibold text-white shadow-lg shadow-primary/25 transition sm:w-auto"
@@ -60,6 +66,13 @@ function goBookDemo() {
         >
           View Subjects
         </button>
+        <button
+          type="button"
+          class="border-accent text-primary hover:bg-light w-full rounded-xl border-2 bg-white px-8 py-3.5 font-semibold transition sm:w-auto"
+          @click="goContact"
+        >
+          Contact Us
+        </button>
       </div>
     </div>
 
@@ -69,7 +82,7 @@ function goBookDemo() {
         class="border-accent/20 bg-white/90 flex flex-col flex-wrap items-center justify-center gap-4 rounded-2xl border px-4 py-5 shadow-md backdrop-blur sm:flex-row sm:gap-8 md:gap-12"
       >
         <p class="text-center text-sm font-semibold text-dark sm:text-base">
-          <span class="text-primary">500+</span> Students Taught
+          <span class="text-primary">300+</span> Students Taught
         </p>
         <span class="text-accent/40 hidden sm:inline" aria-hidden="true">|</span>
         <p class="text-center text-sm font-semibold text-dark sm:text-base">

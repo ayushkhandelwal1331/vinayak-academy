@@ -49,7 +49,7 @@ const subjects = [
             <span
               class="bg-light text-primary mt-4 inline-flex w-fit rounded-full px-3 py-1 text-xs font-bold"
             >
-              Class 1–10
+              Class 5 to 10
             </span>
           </article>
         </div>

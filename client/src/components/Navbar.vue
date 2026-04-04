@@ -41,6 +41,12 @@ function goBookDemo(e) {
   router.push({ name: 'book-demo' });
 }
 
+function goContact(e) {
+  e.preventDefault();
+  ui.closeMobileMenu();
+  router.push({ name: 'contact' });
+}
+
 function handleLogoClick(e) {
   e.preventDefault();
   ui.closeMobileMenu();
@@ -90,6 +96,16 @@ onUnmounted(() => {
         </li>
         <li>
           <a
+            href="/contact"
+            class="text-dark/80 hover:text-accent font-sans text-sm font-semibold transition-colors"
+            :class="{ 'text-primary': route.name === 'contact' }"
+            @click="goContact"
+          >
+            Contact
+          </a>
+        </li>
+        <li>
+          <a
             href="/book-demo"
             class="text-dark/80 hover:text-accent font-sans text-sm font-semibold transition-colors"
             :class="{ 'text-primary': route.name === 'book-demo' }"
@@ -131,6 +147,16 @@ onUnmounted(() => {
             @click="handleSectionClick($event, link.id)"
           >
             {{ link.label }}
+          </a>
+        </li>
+        <li>
+          <a
+            href="/contact"
+            class="text-dark hover:bg-light block rounded-lg px-3 py-2 font-semibold transition-colors"
+            :class="{ 'text-primary': route.name === 'contact' }"
+            @click="goContact"
+          >
+            Contact
           </a>
         </li>
         <li>

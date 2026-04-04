@@ -22,6 +22,11 @@ function goBookDemo(e) {
   e.preventDefault();
   router.push({ name: 'book-demo' });
 }
+
+function goContact(e) {
+  e.preventDefault();
+  router.push({ name: 'contact' });
+}
 </script>
 
 <template>
@@ -71,6 +76,14 @@ function goBookDemo(e) {
             </li>
             <li>
               <a
+                href="/contact"
+                class="text-white/80 hover:text-accent transition"
+                @click="goContact"
+                >Contact us</a
+              >
+            </li>
+            <li>
+              <a
                 href="/book-demo"
                 class="text-white/80 hover:text-accent transition"
                 @click="goBookDemo"
@@ -82,9 +95,9 @@ function goBookDemo(e) {
         <div>
           <p class="font-display text-lg font-semibold text-white">Contact</p>
           <ul class="text-white/80 mt-3 space-y-2 text-sm">
-            <li>Phone: <span class="text-white/90">+91-XXXXXXXXXX</span></li>
-            <li>Email: <span class="text-white/90">hello@vinayakacademy.example</span></li>
-            <li>WhatsApp: <span class="text-white/90">+91-XXXXXXXXXX</span></li>
+            <li>Phone: <span class="text-white/90">+91-7000679090 / 6261373921</span></li>
+            <li>Email: <span class="text-white/90">roochikhandelwal1977@gmail.com</span></li>
+            <li>WhatsApp: <span class="text-white/90">+91-7000679090</span></li>
           </ul>
         </div>
       </div>
