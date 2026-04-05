@@ -59,7 +59,8 @@ export async function sendEnquiryNotification(enquiry) {
 
   try {
     const { data, error } = await getResend().emails.send({
-      from: 'Vinayak Academy <onboarding@resend.dev>',
+      from: 'Vinayak Academy <noreply@vinayakacademy.in>',
+      replyTo: trimEnv('NOTIFY_EMAIL'),
       to,
       subject: `[Vinayak Academy] New enquiry from ${enquiry.studentName}`,
       html,
@@ -137,7 +138,8 @@ export async function sendStudentEnquiryConfirmation(enquiry) {
 
   try {
     const { data, error } = await getResend().emails.send({
-      from: 'Vinayak Academy <onboarding@resend.dev>',
+      from: 'Vinayak Academy <noreply@vinayakacademy.in>',
+      replyTo: trimEnv('NOTIFY_EMAIL'),
       to: enquiry.email,
       subject: 'Thank you for contacting Vinayak Academy! 🎓',
       html,
@@ -162,7 +164,7 @@ export async function sendTestMail() {
   }
   try {
     const { data, error } = await getResend().emails.send({
-      from: 'Vinayak Academy <onboarding@resend.dev>',
+      from: 'Vinayak Academy <noreply@vinayakacademy.in>',
       to: trimEnv('NOTIFY_EMAIL'),
       subject: '[Vinayak Academy] Test email — deployment check',
       text: 'If you received this, email sending is working on your deployed server.',

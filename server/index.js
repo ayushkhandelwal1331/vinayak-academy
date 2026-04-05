@@ -67,6 +67,16 @@ async function start() {
 
   const server = app.listen(PORT, () => {
     console.log(`Server listening on http://localhost:${PORT}`);
+
+    // Render free tier sleeps after 15 min of inactivity — ping every 14 min to stay warm
+    const selfUrl = process.env.RENDER_EXTERNAL_URL;
+    if (selfUrl) {
+      const INTERVAL = 14 * 60 * 1000;
+      setInterval(() => {
+        fetch(`${selfUrl}/health`).catch(() => {});
+      }, INTERVAL);
+      console.log(`Keep-alive ping enabled: ${selfUrl}/health every 14 min`);
+    }
   });
 
   server.on('error', (err) => {

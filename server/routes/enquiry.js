@@ -1,6 +1,9 @@
 import { Router } from 'express';
 import Enquiry from '../models/Enquiry.js';
-import { sendEnquiryNotification } from '../services/mail.js';
+import {
+  sendEnquiryNotification,
+  sendStudentEnquiryConfirmation,
+} from '../services/mail.js';
 
 const router = Router();
 
@@ -39,8 +42,7 @@ router.post('/enquiry', async (req, res) => {
       id: enquiry._id,
     });
 
-    // Send admin notification in the background
-    // TODO: Re-enable student confirmation email once a custom domain is verified with Resend
+    // Fire both emails in parallel in the background
     const enquiryData = {
       studentName: enquiry.studentName,
       phoneNumber: enquiry.phoneNumber,
@@ -50,11 +52,19 @@ router.post('/enquiry', async (req, res) => {
       message: enquiry.message,
     };
 
-    sendEnquiryNotification(enquiryData).then((result) => {
-      if (result.sent) {
+    Promise.allSettled([
+      sendEnquiryNotification(enquiryData),
+      sendStudentEnquiryConfirmation(enquiryData),
+    ]).then(([admin, student]) => {
+      if (admin.value?.sent) {
         console.log('[MAIL] Admin notification sent');
       } else {
-        console.warn('[MAIL] Admin notification failed:', result.reason);
+        console.warn('[MAIL] Admin notification failed:', admin.value?.reason || admin.reason);
+      }
+      if (student.value?.sent) {
+        console.log('[MAIL] Student confirmation sent');
+      } else {
+        console.warn('[MAIL] Student confirmation failed:', student.value?.reason || student.reason);
       }
     });
 
